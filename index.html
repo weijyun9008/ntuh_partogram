@@ -82,8 +82,8 @@
 <body>
 <script>
    function processData() {
-      var record = document.getElementById("record").value.replace(/\n/g,'<br>');
-      var records = record.split(/(?=\d\d\/\d\d\s\d\d:\d\d)/);
+      var record = document.getElementById("record").value;
+      var records = record.split(/(?=\n\d\d\/\d\d\s\d\d:\d\d)/);
 
       //Processed array: cArray[time,course,os,station,processed]
       var cArray= conversionArray(records);
@@ -92,10 +92,10 @@
       var rArray = resultArray(cArray);
       writeTable(rArray,"resultTable");
       
-      document.getElementById("osCourse").innerHTML = timeFormat(osCourse);
-      document.getElementById("deliveryCourse").innerHTML = timeFormat(deliveryCourse-osCourse);
-      document.getElementById("placentaCourse").innerHTML = timeFormat(placentaCourse-deliveryCourse);
-      document.getElementById("totalCourse").innerHTML = timeFormat(placentaCourse);
+      document.getElementById("osCourse").innerHTML = timeFormat2(osCourse);
+      document.getElementById("deliveryCourse").innerHTML = timeFormat2(deliveryCourse-osCourse);
+      document.getElementById("placentaCourse").innerHTML = timeFormat2(placentaCourse-deliveryCourse);
+      document.getElementById("totalCourse").innerHTML = timeFormat2(placentaCourse);
       $('#result').collapse('show');
    }
 
@@ -144,7 +144,7 @@
             }
          }
 
-         resultArray.push([time, formatted, os, station, cmOS, cmStation]);
+         resultArray.push([time, os, station, formatted, cmOS, cmStation]);
       }
       
       return resultArray;
@@ -164,8 +164,10 @@
       //Match station and os in a string
       var stringRegs = [
          "([0-5][\+\-]?[^0-9]{0,2})(fb?[\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
+         "os[^0-9]{0,3}([0-5][\+\-]?)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
          "([0-5][\+\-]?[^0-9]{0,2})(指[\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
          "(full)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
+         "(brim)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
          "(ft)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-\/]?[0-3]?)([\s\,，、。\/]+)",
          "(close)([\s\,，、。\/]+)(high)([\s\,，、。\/]+)"];
       for (var i=0 ; i < stringRegs.length ; i++) {
@@ -201,19 +203,28 @@
       //Match cervical os
       if(os == null){
          var osRegs = [
-            "os[^0-9]{0,3}([0-5][\+\-]?).{0,2}fb",
-            "子?宮頸?口?[^0-9]{0,3}([0-5][\+\-]?).{0,2}指",
-            "子?宮頸?口?[^0-9]{0,3}([0-5][\+\-]?).{0,2}fb",
+            "os[^0-9]{0,3}([0-5][\+\-]?).{0,2}fb?",
+            "子?宮頸?口?[^0-9底]{0,3}([0-5][\+\-]?).{0,2}指",
+            "子?宮頸?口?[^0-9底]{0,3}([0-5][\+\-]?).{0,2}fb?",
+            "頸口.{0,3}([0-5][\+\-]?.{0,2})指",
             "os.{0,3}([0-5][\+\-]?.{0,2})指",
             "os.{0,3}(full)",
             "內診.{0,5}(full)",
+            "內診[^0-9]{0,3}([0-5][\+\-]?).{0,2}指",
+            "內診[^0-9]{0,3}([0-5][\+\-]?).{0,2}fb?",
             "子?宮頸?口?.{0,3}(full)",
             "子?宮頸?口?.{0,3}(ft)",
             "子?宮頸?口?(全開)",
             "子?宮頸?口?.{0,3}(緊)",
             "os.{0,3}(緊)",
             "os.{0,3}(close)",
-            "os.{0,3}(ft)"];
+            "os.{0,3}(ft)",
+            "(brim)",
+            "[^宮底].*(一指半?)",
+            "[^宮底].*(二指半?)",
+            "[^宮底].*(三指半?)",
+            "[^宮底].*(四指半?)",
+            "[^宮底].*(五指)"];
          for (var i=0 ; i < osRegs.length ; i++) {
             var Reg = new RegExp(osRegs[i]);
             var matched = null;
@@ -278,6 +289,23 @@
       return formatted;
    }
 
+   function timeFormat2(minutes){
+      var negative = false;
+      if(minutes<0){
+         minutes = -minutes;
+         negative = true;
+      }
+
+      var hours = Math.floor(minutes / 60);
+      var minutes = minutes%60;
+      if (hours < 10 && hours>=0){ hours = "0" + hours; }
+      if (minutes < 10){ minutes = "0" + minutes; }
+      var formatted = hours + ":" + minutes;
+
+      if (negative == true){formatted = '- '+ formatted;}
+      return formatted;
+   }
+
    function transOS(strOS){
       switch (strOS) {
          case "1": strOS = 2; break;
@@ -297,7 +325,17 @@
          case "close": strOS = 0; break;
          case "緊": strOS = 0; break;
          case "full": strOS = 10; break;
+         case "brim": strOS = 9.5; break;
          case "全開": strOS = 10; break;
+         case "一指": strOS = 2; break;
+         case "一指半": strOS = 3; break;
+         case "二指": strOS = 4; break;
+         case "二指半": strOS = 5; break;
+         case "三指": strOS = 6; break;
+         case "三指半": strOS = 7; break;
+         case "四指": strOS = 8; break;
+         case "四指半": strOS = 9; break;
+         case "五指": strOS = 10; break;
       }
       return strOS;
    }
@@ -393,7 +431,7 @@
          <div class="row">
             <div class="col-sm-12">
                <div class="form-group">
-                  <label class="control-label">Nusing records&nbsp; <a class="help" data-toggle="popover" data-content='Input record will be separated by time in the form of "MM/DD mm:ss"' data-placement="right"><span class="glyphicon glyphicon-question-sign" style="color:grey"></span></a></label>
+                  <label class="control-label">Nusing records&nbsp; <a class="help" data-toggle="popover" data-content='紀錄會以位於行首且格式為"MM/DD mm:ss"的時間分割' data-placement="right"><span class="glyphicon glyphicon-question-sign" style="color:grey"></span></a></label>
                   <textarea class="form-control" id='record' style="height:150px;"></textarea>
                </div>
             </div>
@@ -427,9 +465,9 @@
                <thead class="thead-light">
                   <tr>
                      <th scope="col">時間</th>
-                     <th scope="col">經時</th>
                      <th scope="col">OS</th>
                      <th scope="col">Station</th>
+                     <th scope="col">經時</th>
                      <th scope="col">OS (cm)</th>
                      <th scope="col">Station (cm)</th>
                   </tr>
