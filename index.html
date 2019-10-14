@@ -70,6 +70,15 @@
             $this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
          }
       })
+
+      $(function(){
+         // prevents jumping
+         $("a.help").on("click", function (e) {
+            e.preventDefault();
+            return true;
+         });
+         $(".help").popover();
+      });//]]> 
    </script>
 </head>
 
@@ -387,7 +396,7 @@
          <div class="row">
             <div class="col-sm-12">
                <div class="form-group">
-                  <label class="control-label">Nusing records</label>
+                  <label class="control-label">Nusing records&nbsp; <a class="help" data-toggle="popover" data-content='Input record will be separated by time in the form of "MM/DD mm:ss"' data-placement="right"><span class="glyphicon glyphicon-question-sign" style="color:grey"></span></a></label>
                   <textarea class="form-control" id='record' style="height:150px;"></textarea>
                </div>
             </div>
