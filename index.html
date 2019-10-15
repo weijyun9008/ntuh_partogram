@@ -164,7 +164,7 @@
       //Match station and os in a string
       var stringRegs = [
          "([0-5][\+\-]?[^0-9]{0,2})(fb?[\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
-         "os[^0-9]{0,3}([0-5][\+\-]?)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
+         "(?<=os[^0-9]{0,3})([0-5][\+\-]?)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
          "([0-5][\+\-]?[^0-9]{0,2})(指[\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
          "(full)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
          "(brim)([\s\,，、。\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\,，、。\/]+)",
@@ -220,11 +220,11 @@
             "os.{0,3}(close)",
             "os.{0,3}(ft)",
             "(brim)",
-            "[^宮底].*(一指半?)",
-            "[^宮底].*(二指半?)",
-            "[^宮底].*(三指半?)",
-            "[^宮底].*(四指半?)",
-            "[^宮底].*(五指)"];
+            "(?<!Y宮底.{0,5})(一指半?)",
+            "(?<!Y宮底.{0,5})(二指半?)",
+            "(?<!Y宮底.{0,5})(三指半?)",
+            "(?<!Y宮底.{0,5})(四指半?)",
+            "(?<!Y宮底.{0,5})(五指)"];
          for (var i=0 ; i < osRegs.length ; i++) {
             var Reg = new RegExp(osRegs[i]);
             var matched = null;
@@ -379,9 +379,7 @@
       }
    }
 
-   function showtext(id,text){
-      document.getElementById(id).innerHTML = text;
-   }
+   
 </script>
 
 
@@ -443,9 +441,9 @@
       <ul class="nav nav-tabs">
         <li class="active"><a data-toggle="tab" href="#resultTab">Result summary</a></li>
         <li><a data-toggle="tab" href="#convertTab">Conversion table</a></li>
-        
+        <li><a data-toggle="tab" href="#feedback">Problem report</a></li>
       </ul>
-      <div class="tab-content">
+      <div class="tab-content" style="padding-bottom:20px">
          <div id="resultTab" class="tab-pane fade in active">
             <div class="row" id="timePanel" style="text-align: center">
                <div class="col-xs-6 col-md-3" style="padding-top:10px">
@@ -491,6 +489,39 @@
                </tbody>
             </table>
          </div>
+         <div id="feedback" class="tab-pane fade">
+            <h4>Problem report</h4>
+            <p>Please feel free to contact us for any result error. You can report either a single sentence or the whole paragraph.</p>
+            
+            <form action="https://docs.google.com/forms/d/e/1FAIpQLSdFIngf1rwb3TtaYgOiHM9KA_HqHgbttYsGzkjkJRmdG-mpZg/formResponse" method="post" id="application-form" target="_blank">
+               <div class="row">
+                  <div class="col-md-4">
+                     <div class="form-group">
+                        <input type="text" name="entry.1457330209" value="" class="form-control" id="entry.1457330209" dir="auto" aria-label="patientID  " aria-required="true" placeholder="Patient ID">
+                     </div>
+                  </div>
+                  <div class="col-md-4">
+                     <div class="form-group">
+                        <input type="text" name="" value="" class="form-control" id="entry.1369278963" dir="auto" aria-label="patientID  " aria-required="true" placeholder="Your name">
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-md-10">
+                     <div class="form-group">
+                        <textarea type="text" name="entry.2062526224" value="" class="form-control" id="entry.2062526224" dir="auto" aria-label="Probelm  " aria-required="true" placeholder="Paste sentence or paragraph here" style="height:150px;"></textarea>
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-md-5">
+                     <div class="form-group">
+                        <input type="submit" id="submit" class="btn btn-default" name="submit" value="Submit">
+                     </div>
+                  </div>
+               </div>
+            </form>
+         </div>
          <div id="partograph" class="tab-pane fade">
             <h4>Under constuction... (delayed indefinitely)</h4>
             <p></p>
@@ -499,6 +530,7 @@
    </div>
    </div>
 </div>
+
       
 </body>
 </html>
