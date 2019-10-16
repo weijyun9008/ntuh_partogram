@@ -185,8 +185,9 @@
       //Match station
       if(station == null){
          var stationRegs = [
-            "station[^0-9\+\-]{0,5}([\+\-]?[0-3]\-?[\+\-]?[0-3]?)",
+            "station[^0-9\+\-]{0,5}(high)",
             "胎位.{0,3}(高)",
+            "station[^0-9\+\-]{0,5}([\+\-]?[0-3]\-?[\+\-]?[0-3]?)",
             "胎位[^0-9\+\-]{0,5}([\+\-]?[0-3]\-?[\+\-]?[0-3]?)"];
          for (var i=0 ; i < stationRegs.length ; i++) {
             var Reg = new RegExp(stationRegs[i]);
