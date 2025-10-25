@@ -1,557 +1,321 @@
 <!DOCTYPE html>
 <html>
-<head>
-   <title>藍單小幫手</title>
-   <meta charset="utf-8">
+  <head>
+    <title>藍單小幫手2.0 beta</title>
+    <meta charset="utf-8" />
 
-   <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css">
-   <style type="text/css">
-      .container {
-         margin-top: 40px;
-      }
-      .btn-primary {
-         width: 100%;
-      }
-      .panel-heading{
-         font-weight: bold;
-      }
-      .nav-tabs > li > a{
-         font-size: medium;
-      }
-      .table tbody tr td{
-         vertical-align: middle;
-         text-align: center;
-      }
-      .table thead th{
-         text-align: center;
-      }
-      #conversionTable td:last-child {
-         text-align: left;
-      }
-      #timePanel .badge{
-         font-size: medium;
-         display:inline-block; 
-         width:170px;
-      }
-   </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
 
-   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> 
-   <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js"></script> 
-   <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> 
-   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"
+    ></script>
+  </head>
 
-   <script type='text/javascript'>
-      $( document ).ready(function() {
-         $('#onsetTime').datetimepicker({
-            format : 'YYYY/MM/DD HH:mm',
-         });
-         $('#delivery').datetimepicker({
-            format : 'YYYY/MM/DD HH:mm',
-         });
-         $('#placenta').datetimepicker({
-            format : 'YYYY/MM/DD HH:mm',
-         });
-      });
-      
-      //Fold the panel with arrow sign
-      $(document).on('click', '.panel-heading span.clickable', function (e) {
-         var $this = $(this);
-         if (!$this.hasClass('panel-collapsed')) {
-            $this.parents('.panel').find('.panel-body').slideUp();
-            $this.addClass('panel-collapsed');
-            $this.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
-         } else {
-            $this.parents('.panel').find('.panel-body').slideDown();
-            $this.removeClass('panel-collapsed');
-            $this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
-         }
-      })
+  <body>
+    <div class="container">
+      <div class="row header-row">
+        <div class="col-xs-8">
+          <div class="h2">藍單小幫手 2.0 beta</div>
+        </div>
 
-      $(function(){
-         // prevents jumping
-         $("a.help").on("click", function (e) {
-            e.preventDefault();
-            return true;
-         });
-         $(".help").popover();
-      });//]]> 
-   </script>
-</head>
-
-<body>
-<script>
-   function processData() {
-      var record = document.getElementById("record").value;
-      var records = record.split(/(?=\n\d\d\/\d\d\s\d\d:\d\d)/);
-
-      //Processed array: cArray[time,course,os,station,processed]
-      var cArray= conversionArray(records);
-      writeTable(cArray,"conversionTable");
-
-      var rArray = resultArray(cArray);
-      writeTable(rArray,"resultTable");
-      
-      document.getElementById("osCourse").innerHTML = timeFormat2(osCourse);
-      document.getElementById("deliveryCourse").innerHTML = timeFormat2(deliveryCourse-osCourse);
-      document.getElementById("placentaCourse").innerHTML = timeFormat2(placentaCourse-deliveryCourse);
-      document.getElementById("totalCourse").innerHTML = timeFormat2(placentaCourse);
-      $('#result').collapse('show');
-   }
-
-   //Get array from text records: [time,course,os,station,processed]
-   function conversionArray(items){
-      var pArray=[];
-      for (var i = 0; i < items.length ; i++) {
-         var temp = extractData(items[i]);
-         pArray.push(temp);
-      }
-      var deliveryArray = getDelivery();
-      pArray.push(deliveryArray);
-
-      pArray.sort(function(a, b) {
-         var valueA, valueB;
-
-         valueA = a[1]; // sorting according to 2nd item
-         valueB = b[1];
-         if (valueA < valueB) { return -1;}
-         else if (valueA > valueB) {return 1;}
-         return 0;
-      });
-
-      return pArray;
-   }
-   
-   function resultArray(myArray){
-      var resultArray=[];
-      var osFull = 0;
-
-      for (var i = 0; i < myArray.length ; i++) {
-         if ( myArray[i][2] == null && myArray[i][3] == null){continue;}
-         var time = myArray[i][0];
-         var formatted = timeFormat(myArray[i][1]);
-         var os = myArray[i][2];
-         var station = myArray[i][3];
-
-         var cmStation = transStation(station);
-         if (osFull == 1) {
-            var cmOS = 10 ;
-         } else {
-            var cmOS = transOS(os);
-            if (cmOS == 10){ 
-               osCourse = myArray[i][1]; //global variable
-               osFull = 1;
-            }
-         }
-
-         resultArray.push([time, os, station, formatted, cmOS, cmStation]);
-      }
-      
-      return resultArray;
-   }
-
-   function extractData(item){
-      var time = null, course = null, os = null, station = null;
-      var processed = item.toLowerCase().replace(/\~/g,'-');
-
-      //Match time data and caculate clinical course
-      var timeMatched = item.match(/\d\d\/\d\d\s\d\d:\d\d/);
-      if ( timeMatched !== null){
-         time = timeMatched[0];
-         course = timeCourse(time);
-      } 
-
-      //Match station and os in a string
-      var stringRegs = [
-         "([0-5][\+\-]?[^0-9]{0,2})(fb?[\s\,\.，、。]+)([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)([\s\,\.，、。]+)",
-         "os[^0-9]{0,2}([0-5][\+\-]?)([\s\,\.，、。]+)([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)(.+)",
-         "os[^0-9]{0,2}([0-5][\+\-]?)([\s\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)",
-         "([0-5一二三四五][\+\-]?[^0-9]{0,2})(指半?[\s\,\.，、。]+)([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)([\s\,\.，、。]+)",
-         "(full)([\s\,\.，、。]+)([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)([\s\,\.，、。]+)",
-         "(brim)([\s\,\.，、。]+)([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)([\s\,\.，、。]+)",
-         "(ft)([\s\,\.，、。]+)([\+\-]?[0-3][\-\/／]?[\+\-\/]?[0-3]?)([\s\,\.，、。]+)",
-         "([0-5][\+\-]?[^0-9]{0,2})(fb?[\s\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\/]+)",
-
-         "(close)([\s\,\.，、。]+)(high)([\s\,\.，、。]+)",
-         "([0-5][\+\-]?[^0-9]{0,2})(fb?[\s\,\.，、。]+)(high)([\s\,\.，、。]+)",
-         "os[^0-9]{0,2}([0-5][\+\-]?)([\s\,\.，、。]+)(high)(.+)",
-         "os[^0-9]{0,2}([0-5][\+\-]?)([\s\/]+)(high)",
-         "([0-5][\+\-]?[^0-9]{0,2})(fb?[\s\/]+)(high)([\s\/]+)",
-         
-         "([0-5一二三四五][\+\-]?[^0-9]{0,2})(指半?[\s\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)([\s\/]+)",
-         "(full)([\s\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)(.+)",
-         "(brim)([\s\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)(.+)",
-         "(ft)([\s\/]+)([\+\-]?[0-3]\-?[\+\-]?[0-3]?)(.+)",
-         ];
-
-      for (var i=0 ; i < stringRegs.length ; i++) {
-         var Reg = new RegExp(stringRegs[i]);
-         var matched = null;
-         
-         matched = processed.match(Reg);
-         if ( matched !== null ){
-            os = matched[1];
-            station = matched[3];
-            processed = processed.replace(matched[1]+matched[2]+matched[3]+matched[4],'<span style="color:red;">'+matched[1]+'</span>'+matched[2]+'<span style="color:blue;">'+matched[3]+'</span>'+matched[4]);
-         }
-      }
-
-      //Match station
-      if(station == null){
-         var stationRegs = [
-            "station[^0-9\+\-]{0,5}(high)",
-            "胎位.{0,3}(高)",
-            "station[^0-9\+\-]{0,2}\s?([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)",
-            "胎位[^0-9\+\-]{0,5}([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)",
-            "[^a-z]s:[^0-9\+\-]{0,2}\s?([\+\-]?[0-3][\-\/／]?[\+\-]?[0-3]?)"];
-         for (var i=0 ; i < stationRegs.length ; i++) {
-            var Reg = new RegExp(stationRegs[i]);
-            var matched = null;
-            matched = processed.match(Reg);
-            if ( matched !== null ){
-               station = matched[1];
-               processed = processed.replace(matched[0],'<span style="color:blue;">'+matched[0]+'</span>');
-               break;
-            } 
-         }
-      }
-
-      //Match cervical os
-      if(os == null){
-         var osRegs = [
-            "os[^0-9]{0,3}([0-5][\+\-]?).{0,2}fb?",
-            "os[^0-9]{0,2}([0-5][\+\-]?)",
-            "子?宮頸?口?[^0-9底]{0,3}([0-5一二三四五][\+\-]?).{0,2}指半?",
-            "子?宮頸?口?[^0-9底]{0,3}([0-5][\+\-]?).{0,2}fb?",
-            "頸口.{0,3}([0-5一二三四五][\+\-]?.{0,2})指半?",
-            "os.{0,3}([0-5一二三四五][\+\-]?.{0,2})指半?",
-            "os.{0,3}(full)",
-            "內診.{0,5}(full)",
-            "內診[^0-9]{0,3}([0-5一二三四五][\+\-]?).{0,2}指半?",
-            "內診[^0-9]{0,3}([0-5][\+\-]?).{0,2}fb?",
-            "子?宮頸?口?.{0,3}(full)",
-            "子?宮頸?口?.{0,3}(ft)",
-            "子?宮頸?口?(全開)",
-            "子?宮頸?口?.{0,3}(緊)",
-            "os.{0,3}(緊)",
-            "os.{0,3}(close)",
-            "os.{0,3}(ft)",
-            "(brim)",
-            ];
-         for (var i=0 ; i < osRegs.length ; i++) {
-            var Reg = new RegExp(osRegs[i]);
-            var matched = null;
-         
-            matched = processed.match(Reg);
-            if ( matched !== null ){
-               os = matched[1];
-               processed = processed.replace(matched[0],'<span style="color:red;">'+matched[0]+'</span>');
-               break;
-            } 
-         }
-      }
-
-      return [time,course,os,station,processed];
-   }
-
-   function getDelivery(){
-      var startTime = new Date($("#onsetTime").find("input").val());
-      var deliveryString = $("#delivery").find("input").val();
-      var deliveryTime = new Date(deliveryString);
-      deliveryString = deliveryString.substr(5);
-
-      var placentaString = $("#placenta").find("input").val();
-      var placentaTime = new Date(placentaString);
-      placentaCourse = ( placentaTime.getTime()-startTime.getTime() ) / 1000 / 60; //global variable
-
-      var diff = deliveryTime.getTime() - startTime.getTime();
-      deliveryCourse = diff / 1000 / 60; //global variable
-      return [deliveryString,deliveryCourse,'full','+3','出生'];
-   }
-
-   function timeCourse(itemTime){
-      var startTime = new Date($("#onsetTime").find("input").val());
-      var year = startTime.getFullYear();
-      var endTime = new Date(year+'/'+itemTime);
-      if (startTime.getMonth() == 11 && endTime.getMonth() == 0){
-         endTime.setYear(year+1);
-      }
-
-      var diff = endTime.getTime() - startTime.getTime();
-      var resultTime = diff / 1000 / 60;
-      return resultTime;
-   }
-
-   function timeFormat(minutes){
-      var negative = false;
-      if(minutes<0){
-         minutes = -minutes;
-         negative = true;
-      }
-
-      var days = Math.floor(minutes / 60 / 24);
-      minutes -= days*1440;
-      var hours = Math.floor(minutes / 60);
-      var minutes = minutes%60;
-      if (hours < 10 && hours>=0){ hours = "0" + hours; }
-      if (minutes < 10){ minutes = "0" + minutes; }
-      var formatted = hours + ":" + minutes;
-      if (days > 0){ formatted = days + "D "+ formatted;}
-
-      if (negative == true){formatted = '- '+ formatted;}
-      return formatted;
-   }
-
-   function timeFormat2(minutes){
-      var negative = false;
-      if(minutes<0){
-         minutes = -minutes;
-         negative = true;
-      }
-
-      var hours = Math.floor(minutes / 60);
-      var minutes = minutes%60;
-      if (hours < 10 && hours>=0){ hours = "0" + hours; }
-      if (minutes < 10){ minutes = "0" + minutes; }
-      var formatted = hours + ":" + minutes;
-
-      if (negative == true){formatted = '- '+ formatted;}
-      return formatted;
-   }
-
-   function transOS(strOS){
-      switch (strOS) {
-         case "1": strOS = 2; break;
-         case "2": strOS = 4; break;
-         case "3": strOS = 6; break;
-         case "4": strOS = 8; break;
-         case "5": strOS = 10; break;
-         case "1+": strOS = 3; break;
-         case "2+": strOS = 5; break;
-         case "3+": strOS = 7; break;
-         case "4+": strOS = 9; break;
-         case "1-": strOS = 1; break;
-         case "2-": strOS = 3; break;
-         case "3-": strOS = 5; break;
-         case "4-": strOS = 7; break;
-         case "ft": strOS = 1; break;
-         case "close": strOS = 0; break;
-         case "緊": strOS = 0; break;
-         case "full": strOS = 10; break;
-         case "brim": strOS = 9.5; break;
-         case "全開": strOS = 10; break;
-         case "一指": strOS = 2; break;
-         case "一指半": strOS = 3; break;
-         case "二指": strOS = 4; break;
-         case "二指半": strOS = 5; break;
-         case "三指": strOS = 6; break;
-         case "三指半": strOS = 7; break;
-         case "四指": strOS = 8; break;
-         case "四指半": strOS = 9; break;
-         case "五指": strOS = 10; break;
-      }
-      return strOS;
-   }
-
-   function transStation(strStation){
-   	if(strStation == null){
-   	   return strStation
-   	   ;
-   	}
-   	strStation = strStation.replace(/／/g,'/');
-   	strStation = strStation.replace(/\+/g,'');
-      switch (strStation) {
-         case "-3": strStation = -3; break;
-         case "-2": strStation = -2; break;
-         case "-1": strStation = -1; break;
-         case "0": strStation = 0; break;
-         case "1": strStation = 1; break;
-         case "2": strStation = 2; break;
-         case "3": strStation = 3; break;
-         case "high": strStation = -3; break;
-         case "高": strStation = -3; break;
-         case "-3--2": strStation = -2.5; break;
-         case "-2--1": strStation = -1.5; break;
-         case "-1-0": strStation = -0.5; break;
-         case "0-1": strStation = 0.5; break;
-         case "1-2": strStation = 1.5; break;
-         case "2-3": strStation = 2.5; break;
-         case "-3/-2": strStation = -2.5; break;
-         case "-2/-1": strStation = -1.5; break;
-         case "-1/0": strStation = -0.5; break;
-         case "0/1": strStation = 0.5; break;
-         case "1/2": strStation = 1.5; break;
-         case "2/3": strStation = 2.5; break;
-      }
-      return strStation;
-   }
-
-   function writeTable(myArray, myTable){
-      $("#"+myTable).empty();
-      var t = document.getElementById(myTable);
-      for(var i=0;i<myArray.length;i++) {
-         t.insertRow();
-         for(var j=0;j<myArray[i].length;j++){
-            t.rows[i].insertCell(j);
-            t.rows[i].cells[j].innerHTML = myArray[i][j];
-         }
-      }
-   }
-
-   
-</script>
-
-
-<div class="container">
-   <div class="h2">藍單小幫手</div>
-   <div class="panel panel-primary">
-      <div class="panel-heading"> 
-         Labor Course Data
-         <span class="pull-right clickable"><i class="glyphicon glyphicon-chevron-up"></i></span>
+        <div class="col-xs-4 text-right header-links">
+          <div>
+            created by&nbsp;
+            <a
+              class="github-link"
+              href="https://github.com/iv0202lai"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              iv0202lai
+            </a>
+          </div>
+          <div>
+            enhanced by&nbsp;
+            <a
+              class="github-link"
+              href="https://github.com/weijyun9008"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              weijyun9008
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="panel-body">
-         <div class="row">
-            <div class='col-sm-4'>
-               <div class="form-group">
-                  <label class="control-label">Onset of true labor</label>
-                  <div class='input-group date' id='onsetTime'>
-                     <input type='text' class="form-control" />
-                     <span class="input-group-addon">
-                     <span class="glyphicon glyphicon-calendar"></span>
-                     </span>
-                  </div>
-               </div>
-            </div>
-            <div class='col-sm-4'>
-               <div class="form-group">
-                  <label class="control-label">Delivery time</label>
-                  <div class='input-group date' id='delivery'>
-                     <input type='text' class="form-control" />
-                     <span class="input-group-addon">
-                     <span class="glyphicon glyphicon-calendar"></span>
-                     </span>
-                  </div>
-               </div>
+
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          Labor Course Data
+          <span class="pull-right clickable"
+            ><i class="glyphicon glyphicon-chevron-up"></i
+          ></span>
+        </div>
+
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label" for="onsetTime"
+                  >Onset of true labor</label
+                >
+                <div class="input-group date" id="onsetTime" name="onsetTime">
+                  <input type="text" class="form-control" />
+                  <!-- <input type="text" class="form-control" /> -->
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
             </div>
             <div class="col-sm-4">
-               <div class="form-group">
-                  <label class="control-label">Placenta expulsion</label>
-                  <div class='input-group date' id='placenta'>
-                     <input type='text' class="form-control" />
-                     <span class="input-group-addon">
-                     <span class="glyphicon glyphicon-calendar"></span>
-                     </span>
-                  </div>
-               </div>
+              <div class="form-group">
+                <label class="control-label" for="delivery"
+                  >Delivery time</label
+                >
+                <div class="input-group date" id="delivery" name="delivery">
+                  <input type="text" class="form-control" />
+                  <!-- <input type="text" class="form-control" /> -->
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
             </div>
-         </div>
-         <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label" for="placenta"
+                  >Placenta expulsion</label
+                >
+                <div class="input-group date" id="placenta" name="placenta">
+                  <input type="text" class="form-control" />
+                  <!-- <input type="text" class="form-control" /> -->
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
             <div class="col-sm-12">
-               <div class="form-group">
-                  <label class="control-label">Nusing records&nbsp; <a class="help" data-toggle="popover" data-content='紀錄會以位於行首且格式為"MM/DD mm:ss"的時間分割' data-placement="right"><span class="glyphicon glyphicon-question-sign" style="color:grey"></span></a></label>
-                  <textarea class="form-control" id='record' style="height:150px;" placeholder="01/01 00:00 產程進展評估   評估/措施：   On fetal monitor 。胎心跳：140次/分，宮縮強度：中，宮縮間隔時間：3分，持續時間：30秒，協助陰道內診。&#10;評值/結果：  station：+2。側躺用力中。&#10;  OOO   查&#10;01/01 03:33 宮縮及胎心音評估 評估/措施：   On fetal monitor。胎心跳：137次/分，宮縮強度：中弱，宮縮間隔時間：3分，持續時間：30秒。&#10;評值/結果：   教導側躺用力尚可配合。&#10;  OOO   查"></textarea>
-               </div>
+              <div class="form-group">
+                <label class="control-label"
+                  >Nursing records&nbsp;
+                  <a
+                    class="help"
+                    data-toggle="popover"
+                    data-content='紀錄會以位於行首且格式為"MM/DD mm:ss"的時間分割'
+                    data-placement="right"
+                    ><span
+                      class="glyphicon glyphicon-question-sign"
+                      style="color: grey"
+                    ></span></a
+                ></label>
+                <textarea
+                  class="form-control"
+                  id="record"
+                  style="height: 150px"
+                  placeholder="01/01 00:00 產程進展評估   評估/措施：   On fetal monitor 。胎心跳：140次/分，宮縮強度：中，宮縮間隔時間：3分，持續時間：30秒，協助陰道內診。&#10;評值/結果：  station：+2。側躺用力中。&#10;  OOO   查&#10;01/01 03:33 宮縮及胎心音評估 評估/措施：   On fetal monitor。胎心跳：137次/分，宮縮強度：中弱，宮縮間隔時間：3分，持續時間：30秒。&#10;評值/結果：   教導側躺用力尚可配合。&#10;  OOO   查"
+                ></textarea>
+              </div>
             </div>
-         </div>
-         <input type="button" class="btn btn-primary" value="Submit" onclick="processData()" >
+          </div>
+          <input
+            type="button"
+            class="btn btn-primary"
+            value="Submit"
+            onclick="processData()"
+          />
+        </div>
       </div>
-   </div>
-   <div id="result" class="collapse">
-      <ul class="nav nav-tabs">
-        <li class="active"><a data-toggle="tab" href="#resultTab">Result summary</a></li>
-        <li><a data-toggle="tab" href="#convertTab">Conversion table</a></li>
-        <li><a data-toggle="tab" href="#feedback">Problem report</a></li>
-      </ul>
-      <div class="tab-content" style="padding-bottom:20px">
-         <div id="resultTab" class="tab-pane fade in active">
-            <div class="row" id="timePanel" style="text-align: center">
-               <div class="col-xs-6 col-md-3" style="padding-top:10px">
-                  <span class="badge badge-light">第一產程：<span id="osCourse"></span></span>
-               </div>
-               <div class="col-xs-6 col-md-3" style="padding-top:10px">
-                  <span class="badge badge-light">第二產程：<span id="deliveryCourse"></span></span>
-               </div>
-               <div class="col-xs-6 col-md-3" style="padding-top:10px">
-                  <span class="badge badge-light">第三產程：<span id="placentaCourse"></span></span>
-               </div>
-               <div class="col-xs-6 col-md-3" style="padding-top:10px">
-                  <span class="badge badge-light">總時長：<span id="totalCourse"></span></span>
-               </div>
-            </div>
-            <table class="table table-hover layout-fixed" style="table-layout: fixed; padding-top:20px">
-               <thead class="thead-light">
-                  <tr>
-                     <th scope="col">時間</th>
-                     <th scope="col">OS</th>
-                     <th scope="col">Station</th>
-                     <th scope="col">經時</th>
-                     <th scope="col">OS (cm)</th>
-                     <th scope="col">Station (cm)</th>
-                  </tr>
-               </thead>
-               <tbody id="resultTable">
-               </tbody>
-            </table>
-         </div>
-         <div id="convertTab" class="tab-pane fade">
-            <table class="table table-hover">
-               <thead class="thead-light">
-                  <tr>
-                     <th scope="col">時間</th>
-                     <th scope="col">分鐘</th>
-                     <th scope="col">OS</th>
-                     <th scope="col">Station</th>
-                     <th scope="col">紀錄</th>
-                  </tr>
-               </thead>
-               <tbody id="conversionTable">
-               </tbody>
-            </table>
-         </div>
-         <div id="feedback" class="tab-pane fade">
-            <h4>Problem report</h4>
-            <p>Please feel free to contact us for any result error. You can report either a single sentence or the whole paragraph.</p>
-            
-            <form action="https://docs.google.com/forms/d/e/1FAIpQLSdFIngf1rwb3TtaYgOiHM9KA_HqHgbttYsGzkjkJRmdG-mpZg/formResponse" method="post" id="application-form" target="_blank">
-               <div class="row">
-                  <div class="col-md-4">
-                     <div class="form-group">
-                        <input type="text" name="entry.1457330209" value="" class="form-control" id="entry.1457330209" dir="auto" aria-label="patientID  " aria-required="true" placeholder="Patient ID">
-                     </div>
-                  </div>
-                  <div class="col-md-4">
-                     <div class="form-group">
-                        <input type="text" name="" value="" class="form-control" id="entry.1369278963" dir="auto" aria-label="patientID  " aria-required="true" placeholder="Your name">
-                     </div>
-                  </div>
-               </div>
-               <div class="row">
-                  <div class="col-md-10">
-                     <div class="form-group">
-                        <textarea type="text" name="entry.2062526224" value="" class="form-control" id="entry.2062526224" dir="auto" aria-label="Probelm  " aria-required="true" placeholder="Paste sentence or paragraph here" style="height:150px;"></textarea>
-                     </div>
-                  </div>
-               </div>
-               <div class="row">
-                  <div class="col-md-5">
-                     <div class="form-group">
-                        <input type="submit" id="submit" class="btn btn-default" name="submit" value="Submit">
-                     </div>
-                  </div>
-               </div>
-            </form>
-         </div>
-         <div id="partograph" class="tab-pane fade">
-            <h4>Under constuction... (delayed indefinitely)</h4>
-            <canvas id="stockGraph" width="150" height="150">
-               Oops, your browser doesn't support this function. We suggeset you to use Chrome.
-            </canvas>
-         </div>
-      </div>
-   </div>
-   </div>
-</div>
 
-      
-</body>
+      <div id="result" class="collapse">
+        <div class="row" id="timePanel">
+          <div class="col-xs-6 col-md-3">
+            <span class="badge badge-light"
+              >第一產程：<span id="osCourse"></span
+            ></span>
+          </div>
+          <div class="col-xs-6 col-md-3">
+            <span class="badge badge-light"
+              >第二產程：<span id="deliveryCourse"></span
+            ></span>
+          </div>
+          <div class="col-xs-6 col-md-3">
+            <span class="badge badge-light"
+              >第三產程：<span id="placentaCourse"></span
+            ></span>
+          </div>
+          <div class="col-xs-6 col-md-3">
+            <span class="badge badge-light"
+              >總時長：<span id="totalCourse"></span
+            ></span>
+          </div>
+        </div>
+
+        <ul class="nav nav-tabs">
+          <li class="active">
+            <a data-toggle="tab" href="#partogram">Partogram</a>
+          </li>
+          <li>
+            <a data-toggle="tab" href="#resultTab">Result summary</a>
+          </li>
+          <li><a data-toggle="tab" href="#convertTab">Conversion table</a></li>
+          <!-- <li><a data-toggle="tab" href="#feedback">Problem report</a></li> -->
+        </ul>
+
+        <div class="tab-content" style="padding-bottom: 20px">
+          <div id="partogram" class="tab-pane fade in active">
+            <div id="partogramCanvasContainer">
+              <canvas
+                id="partogramCanvas"
+                width="900"
+                height="480"
+                class="partogram-canvas"
+              >
+                Oops, your browser doesn't support this function. We suggest you
+                to use Chrome.
+              </canvas>
+            </div>
+          </div>
+          <div id="resultTab" class="tab-pane fade">
+            <table
+              class="table table-hover layout-fixed"
+              style="table-layout: fixed; padding-top: 20px"
+            >
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">時間</th>
+                  <th scope="col">OS</th>
+                  <th scope="col">Station</th>
+                  <th scope="col">經時</th>
+                  <th scope="col">OS (cm)</th>
+                  <th scope="col">Station (cm)</th>
+                </tr>
+              </thead>
+              <tbody id="resultTable"></tbody>
+            </table>
+          </div>
+          <div id="convertTab" class="tab-pane fade">
+            <table class="table table-hover">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">時間</th>
+                  <th scope="col">分鐘</th>
+                  <th scope="col">OS</th>
+                  <th scope="col">Station</th>
+                  <th scope="col">紀錄</th>
+                </tr>
+              </thead>
+              <tbody id="conversionTable"></tbody>
+            </table>
+          </div>
+          <!-- <div id="feedback" class="tab-pane fade">
+            <h4>Problem report</h4>
+            <p>
+              Please feel free to contact us for any result error. You can
+              report either a single sentence or the whole paragraph.
+            </p>
+
+            <form
+              action="https://docs.google.com/forms/d/e/1FAIpQLSdFIngf1rwb3TtaYgOiHM9KA_HqHgbttYsGzkjkJRmdG-mpZg/formResponse"
+              method="post"
+              id="application-form"
+              target="_blank"
+            >
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <input
+                      type="text"
+                      name="entry.1457330209"
+                      value=""
+                      class="form-control"
+                      id="entry.1457330209"
+                      dir="auto"
+                      aria-label="patientID"
+                      aria-required="true"
+                      placeholder="Patient ID"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <input
+                      type="text"
+                      name=""
+                      value=""
+                      class="form-control"
+                      id="entry.1369278963"
+                      dir="auto"
+                      aria-label="patientID"
+                      aria-required="true"
+                      placeholder="Your name"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-10">
+                  <div class="form-group">
+                    <textarea
+                      type="text"
+                      name="entry.2062526224"
+                      value=""
+                      class="form-control"
+                      id="entry.2062526224"
+                      dir="auto"
+                      aria-label="Problem"
+                      aria-required="true"
+                      placeholder="Paste sentence or paragraph here"
+                      style="height: 150px"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-5">
+                  <div class="form-group">
+                    <input
+                      type="submit"
+                      id="submit"
+                      class="btn btn-default"
+                      name="submit"
+                      value="Submit"
+                    />
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div> -->
+        </div>
+      </div>
+    </div>
+
+    <script src="scripts.js"></script>
+  </body>
 </html>

@@ -1,0 +1,83 @@
+.container {
+  margin-top: 40px;
+}
+.btn-primary {
+  width: 100%;
+}
+.panel-heading {
+  font-weight: bold;
+}
+.nav-tabs > li > a {
+  font-size: medium;
+}
+.table tbody tr td {
+  vertical-align: middle;
+  text-align: center;
+}
+.table thead th {
+  text-align: center;
+}
+#conversionTable td:last-child {
+  text-align: left;
+}
+#timePanel {
+  padding-top: 30px;
+  padding-bottom: 40px;
+  text-align: center;
+}
+#timePanel .badge {
+  font-size: medium;
+  display: inline-block;
+  width: 170px;
+}
+
+#partogramCanvasContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.partogram-canvas {
+  /* border: 1px solid #333; */
+  margin-top: 20px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.partogram-tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  z-index: 1000;
+  display: none;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+.header-links {
+  line-height: 1.2;
+  padding-bottom: 6px;
+}
+
+.github-link {
+  color: #333;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.github-link:hover,
+.github-link:focus {
+  color: #222;
+  text-decoration: underline;
+}
