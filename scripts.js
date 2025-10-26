@@ -137,12 +137,22 @@ function resultArray(items) {
 }
 
 function partogramArray(items) {
-  var pArray = [];
+  let lastNegativeTimeIndex = null;
+  let pArray = [];
 
-  for (var i = 0; i < items.length; i++) {
+  for (let i = 0; i < items.length; i++) {
+    let time = items[i][3];
+    if (time.startsWith("- ")) {
+      lastNegativeTimeIndex = i;
+    }
+
     pArray.push(items[i].slice(-3));
   }
-  if (items[0][0] !== "00:00") {
+
+  if (lastNegativeTimeIndex !== null) {
+    pArray = pArray.slice(lastNegativeTimeIndex);
+    pArray[0][0] = "00:00";
+  } else {
     pArray.unshift(["00:00", 0, -3]);
   }
 
@@ -299,34 +309,6 @@ function timeCourse(itemTime) {
   var diff = endTime.getTime() - startTime.getTime();
   var resultTime = diff / 1000 / 60;
   return resultTime;
-}
-
-function timeFormat(minutes) {
-  var negative = false;
-  if (minutes < 0) {
-    minutes = -minutes;
-    negative = true;
-  }
-
-  var days = Math.floor(minutes / 60 / 24);
-  minutes -= days * 1440;
-  var hours = Math.floor(minutes / 60);
-  var minutes = minutes % 60;
-  if (hours < 10 && hours >= 0) {
-    hours = "0" + hours;
-  }
-  if (minutes < 10) {
-    minutes = "0" + minutes;
-  }
-  var formatted = hours + ":" + minutes;
-  if (days > 0) {
-    formatted = days + "D " + formatted;
-  }
-
-  if (negative == true) {
-    formatted = "- " + formatted;
-  }
-  return formatted;
 }
 
 function timeFormat(minutes) {
@@ -672,7 +654,6 @@ function drawPartogram(pArray) {
     var plotWidth = width - margin.left - margin.right;
     var plotHeight = height - margin.top - margin.bottom;
     var maxHours = 24;
-    var maxDilation = 10;
 
     // Background
     ctx.clearRect(0, 0, width, height);
@@ -682,18 +663,6 @@ function drawPartogram(pArray) {
     ctx.strokeStyle = "#333";
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, width, height);
-
-    // ctx.fillStyle = "#000";
-    // ctx.font = "12px Arial";
-    // ctx.textBaseline = "middle";
-    // ctx.save();
-    // ctx.textAlign = "left";
-    // ctx.fillText("↖", 0, 0);
-    // ctx.fillText("↙", 0, height);
-    // ctx.textAlign = "right";
-    // ctx.fillText("↗", width, 0);
-    // ctx.fillText("↘", width, height);
-    // ctx.restore();
 
     ctx.strokeStyle = "#333";
     ctx.lineWidth = 1;
@@ -778,10 +747,7 @@ function drawPartogram(pArray) {
       var xPos = margin.left + (localHours / maxHours) * plotWidth;
 
       if (!isNaN(entry.dilation)) {
-        var clampedDilation = Math.max(
-          0,
-          Math.min(maxDilation, entry.dilation)
-        );
+        var clampedDilation = Math.max(0, Math.min(10, entry.dilation));
         var yDilation =
           height - margin.bottom - (clampedDilation / 12) * plotHeight;
 
