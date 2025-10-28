@@ -138,18 +138,23 @@ function resultArray(items) {
 
 function partogramArray(items) {
   let lastNegativeTimeIndex = null;
+  let zeroTimeIndex = null;
   let pArray = [];
 
   for (let i = 0; i < items.length; i++) {
     let time = items[i][3];
-    if (time.startsWith("- ")) {
+    if (time.startsWith("-")) {
       lastNegativeTimeIndex = i;
+    } else if (time === "00:00") {
+      zeroTimeIndex = i;
     }
 
     pArray.push(items[i].slice(-3));
   }
 
-  if (lastNegativeTimeIndex !== null) {
+  if (zeroTimeIndex !== null) {
+    pArray = pArray.slice(zeroTimeIndex);
+  } else if (lastNegativeTimeIndex !== null) {
     pArray = pArray.slice(lastNegativeTimeIndex);
     pArray[0][0] = "00:00";
   } else {
